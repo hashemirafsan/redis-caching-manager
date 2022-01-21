@@ -1,0 +1,7 @@
+.idea
+Dockerfile.test
+docker-compose.yml
+src/
+tsconfig.json
+tslint.json
+.prettierrc

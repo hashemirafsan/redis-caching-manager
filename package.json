@@ -1,0 +1,32 @@
+{
+  "name": "redis-cache-manager",
+  "version": "1.0.0",
+  "description": "A cache manager for redis",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "test": "jest --config jestconfig.json --detectOpenHandles",
+    "test:docker": "docker-compose up --abort-on-container-exit --exit-code-from redis-cache-manager",
+    "posttest:docker": "docker-compose down --volumes --remove-orphans"
+  },
+  "author": "Hashemi Rafsan",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.0",
+    "jest": "^27.4.7",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.3",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.5.5"
+  },
+  "files": [
+    "lib/**/*"
+  ]
+}
