@@ -14,6 +14,8 @@ export class RedisCache implements ICache {
     if (this.redisClient?.ping() === 'PONG') return this;
 
     this.redisClient = createClient({ url });
+    // const client = createClient({ url });
+    // client.del()
 
     this.redisClient.on('error', (err: any) => {
       throw new Error(err);
@@ -66,11 +68,13 @@ export class RedisCache implements ICache {
 
   async has(key: string): Promise<boolean> {
     try {
-      return Boolean(await this.redisClient.exists([key]));
+      return Boolean(await this.redisClient.exists(key));
     } catch (error) {
       return false;
     }
   }
 
-  async destroy(key: string) {}
+  async destroy(key: string): Promise<boolean> {
+    return Boolean(await this.redisClient.del(key));
+  }
 }

@@ -3,5 +3,5 @@ export interface ICache {
   get(key: string): any;
   remember(key: string, cb: () => Promise<any>, ttl: any): any;
   has(key: string): Promise<boolean>;
-  destroy(key: string): any;
+  destroy(key: string): Promise<boolean>;
 }
