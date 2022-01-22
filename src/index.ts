@@ -15,7 +15,7 @@ export class RedisCache implements ICache {
 
     this.redisClient = createClient({ url });
     // const client = createClient({ url });
-    // client.del()
+    // client.flushDb()
 
     this.redisClient.on('error', (err: any) => {
       throw new Error(err);
@@ -76,5 +76,9 @@ export class RedisCache implements ICache {
 
   async destroy(key: string): Promise<boolean> {
     return Boolean(await this.redisClient.del(key));
+  }
+
+  async flush(): Promise<boolean> {
+    return Boolean(await this.redisClient.flushDb());
   }
 }
