@@ -8,12 +8,15 @@ beforeAll(async () => {
   });
 });
 
-test('Redis SET (string)', async () => {
-  expect(await cacheManager.set('key', 'value')).toBe('OK');
-});
-
-test('Redis SET (object)', async () => {
-  expect(await cacheManager.set('key', { value: true })).toBe('OK');
+test('Redis Remember (string)', async () => {
+  const result = await cacheManager.remember(
+    'newKey',
+    async () => {
+      return 'newValue';
+    },
+    100,
+  );
+  expect(result).toBe('newValue');
 });
 
 afterAll(async () => {

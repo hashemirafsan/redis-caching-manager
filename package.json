@@ -8,7 +8,7 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
-    "test": "jest --config jestconfig.json --detectOpenHandles",
+    "test": "jest --config jestconfig.json --detectOpenHandles --unhandled-rejections=strict",
     "test:docker": "docker-compose up --abort-on-container-exit --exit-code-from redis-cache-manager",
     "posttest:docker": "docker-compose down --volumes --remove-orphans"
   },

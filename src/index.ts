@@ -10,6 +10,9 @@ export class RedisCache implements ICache {
     const { url, ttl = 600 } = config;
 
     this.ttl = ttl;
+
+    if (this.redisClient?.ping() === 'PONG') return this;
+
     this.redisClient = createClient({ url });
 
     this.redisClient.on('error', (err: any) => {
@@ -25,7 +28,7 @@ export class RedisCache implements ICache {
     return this.redisClient.disconnect();
   }
 
-  async set(key: string, value: any, ttl: any = null) {
+  async set(key: string, value: any, ttl: any = null): Promise<string> {
     try {
       return this.redisClient.set(key, JSON.stringify(value), {
         EX: ttl ?? this.ttl,
@@ -44,12 +47,29 @@ export class RedisCache implements ICache {
     }
   }
 
-  async remember(key: string) {}
+  async remember(key: string, cb: () => any, ttl: any = null) {
+    try {
+      const oldValue = await this.get(key);
+
+      if (!oldValue) {
+        const newValue = await cb();
+        await this.set(key, newValue, ttl);
+
+        return newValue;
+      }
+
+      return oldValue;
+    } catch (err: any) {
+      throw new Error(err);
+    }
+  }
 
   async has(key: string): Promise<boolean> {
-    const c = await this.redisClient.exists([key]);
-    console.log(c);
-    return false;
+    try {
+      return Boolean(await this.redisClient.exists([key]));
+    } catch (error) {
+      return false;
+    }
   }
 
   async destroy(key: string) {}
