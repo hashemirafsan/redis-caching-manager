@@ -6,7 +6,7 @@ export class RedisCache implements ICache {
   private redisClient: any = null;
   private ttl: number = 600;
   private prefix: string = '';
-  private _tags: Array<string> = [];
+  private _tags: string[] = [];
 
   async connect(config: IRedisCacheConfig): Promise<RedisCache> {
     const { url, ttl = 600, prefix = '' } = config;
@@ -29,7 +29,7 @@ export class RedisCache implements ICache {
     return this.redisClient.disconnect();
   }
 
-  tags(keys: Array<string>): RedisCache {
+  tags(keys: string[]): RedisCache {
     this._tags = keys;
     return this;
   }
