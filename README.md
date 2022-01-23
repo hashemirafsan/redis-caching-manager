@@ -29,15 +29,15 @@ const cacheManager = new RedisCache();
 **List of API:**
 
 - [set](#setkey-value-ttl--null)
-- [get](get)
-- [has](has)
-- [remember](remember)
-- [put](put)
-- [pull](pull)
-- [destroy](destroy)
-- [forever](forever)
-- [tags](tags)
-- [flush](flush)
+- [get](#getkey)
+- [has](#haskey)
+- [remember](#rememberkey-cb-ttl--null)
+- [put](#putkey-value-ttl--null)
+- [pull](#pullkey)
+- [destroy](#destroykey)
+- [forever](#foreverkey-value)
+- [tags](#tagskeys-string)
+- [flush](#flush)
 
 ### `set(key, value, ttl = null)`
 
