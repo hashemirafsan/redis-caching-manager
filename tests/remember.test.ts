@@ -2,21 +2,49 @@ import { RedisCache } from '../src/index';
 
 const cacheManager = new RedisCache();
 
+beforeEach(async () => {
+  await cacheManager.flush();
+});
+
 beforeAll(async () => {
   await cacheManager.connect({
     url: 'redis://redis:6379',
   });
 });
 
-test('Redis Remember (string)', async () => {
+test('Redis REMEMBER', async () => {
   const result = await cacheManager.remember(
-    'newKey',
+    'key',
     async () => {
-      return 'newValue';
+      return 'updated_value';
     },
     100,
   );
-  expect(result).toBe('newValue');
+  expect(result).toBe('updated_value');
+});
+
+test('Redis REMEMBER if key exists', async () => {
+  await cacheManager.set('key', 'value');
+  const result = await cacheManager.remember(
+    'key',
+    async () => {
+      return 'updated_value';
+    },
+    100,
+  );
+  expect(result).toBe('value');
+});
+
+test('Redis REMEMBER if not key exists', async () => {
+  await cacheManager.remember(
+    'key',
+    async () => {
+      return 'updated_value';
+    },
+    100,
+  );
+
+  expect(await cacheManager.get('key')).toBe('updated_value');
 });
 
 afterAll(async () => {

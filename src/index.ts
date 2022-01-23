@@ -134,11 +134,6 @@ export class RedisCache implements ICache {
       await this.destroy(key);
       const result = await this.set(key, value, ttl);
 
-      if (this._tags.length) {
-        await this._addTags(key);
-        await this._reset();
-      }
-
       return result;
     } catch (err: any) {
       throw new Error(err);
@@ -149,7 +144,7 @@ export class RedisCache implements ICache {
     const tagPromises = this._tags
       .filter(async (tag) => {
         const members = await this.redisClient.sMembers(tag);
-        return !members.find(key);
+        return !members.includes(key);
       })
       .map((tag) => {
         return this.redisClient.sAdd(tag, key);

@@ -2,19 +2,23 @@ import { RedisCache } from '../src/index';
 
 const cacheManager = new RedisCache();
 
+beforeEach(async () => {
+  await cacheManager.flush();
+});
+
 beforeAll(async () => {
   await cacheManager.connect({
     url: 'redis://redis:6379',
   });
 });
 
-test('Redis HAS (string)', async () => {
-  await cacheManager.set('newValue', 'okFine');
-  expect(await cacheManager.has('newValue')).toBeTruthy();
+test('Redis HAS', async () => {
+  await cacheManager.set('key', 'value');
+  expect(await cacheManager.has('key')).toBeTruthy();
 });
 
-test('Redis HAS not exists (string)', async () => {
-  expect(await cacheManager.has('unknownKey')).toBeFalsy();
+test('Redis HAS if not exists', async () => {
+  expect(await cacheManager.has('key')).toBeFalsy();
 });
 
 afterAll(async () => {
