@@ -9,15 +9,12 @@ export class RedisCache implements ICache {
   private _tags: Array<string> = [];
 
   async connect(config: IRedisCacheConfig): Promise<RedisCache> {
-    const { url, ttl = 600 } = config;
-
+    const { url, ttl = 600, prefix = '' } = config;
     this.ttl = ttl;
+    this.prefix = prefix;
 
     if (this.redisClient?.ping() === 'PONG') return this;
-
     this.redisClient = createClient({ url });
-    // const client = createClient({ url });
-    // client.sMembers()
 
     this.redisClient.on('error', (err: any) => {
       throw new Error(err);
@@ -39,14 +36,15 @@ export class RedisCache implements ICache {
 
   async set(key: string, value: any, ttl: any = null): Promise<string> {
     try {
+      key = this._setKeyPrefix(key);
       const result = await this.redisClient.set(key, JSON.stringify(value), {
         EX: ttl ?? this.ttl,
         NX: true,
       });
 
       if (this._tags.length) {
-        await this.addTags(key);
-        await this.reset();
+        await this._addTags(key);
+        await this._reset();
       }
 
       return result;
@@ -57,6 +55,7 @@ export class RedisCache implements ICache {
 
   async get(key: string) {
     try {
+      key = this._setKeyPrefix(key);
       return JSON.parse(await this.redisClient.get(key));
     } catch (err: any) {
       throw new Error(err);
@@ -86,20 +85,21 @@ export class RedisCache implements ICache {
 
   async has(key: string): Promise<boolean> {
     try {
-      return Boolean(await this.redisClient.exists(key));
+      return Boolean(await this.redisClient.exists(this._setKeyPrefix(key)));
     } catch (error) {
       return false;
     }
   }
 
   async destroy(key: string): Promise<boolean> {
+    key = this._setKeyPrefix(key);
     const destroyPromises = [this.redisClient.del(key)];
 
     if (this._tags.length) {
       this._tags.forEach((tag) => {
         destroyPromises.push(this.redisClient.sRem(tag, key));
       });
-      destroyPromises.push(this.reset());
+      destroyPromises.push(this._reset());
     }
 
     const [delKeyResult] = await Promise.all(destroyPromises);
@@ -112,7 +112,7 @@ export class RedisCache implements ICache {
       const keys = await this.redisClient.sUnion(this._tags);
       if (!keys.length) return false;
 
-      const [delResult] = await Promise.all([this.redisClient.del(keys), this.reset()]);
+      const [delResult] = await Promise.all([this.redisClient.del(keys), this._reset()]);
       return Boolean(delResult);
     }
 
@@ -135,8 +135,8 @@ export class RedisCache implements ICache {
       const result = await this.set(key, value, ttl);
 
       if (this._tags.length) {
-        await this.addTags(key);
-        await this.reset();
+        await this._addTags(key);
+        await this._reset();
       }
 
       return result;
@@ -145,7 +145,7 @@ export class RedisCache implements ICache {
     }
   }
 
-  private async addTags(key: string) {
+  private async _addTags(key: string) {
     const tagPromises = this._tags
       .filter(async (tag) => {
         const members = await this.redisClient.sMembers(tag);
@@ -158,7 +158,11 @@ export class RedisCache implements ICache {
     return Promise.all(tagPromises);
   }
 
-  private async reset() {
+  private async _reset() {
     this._tags = [];
+  }
+
+  private _setKeyPrefix(key: string) {
+    return `${this.prefix}${key}`;
   }
 }
