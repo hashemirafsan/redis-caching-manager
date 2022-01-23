@@ -3,8 +3,10 @@ import { ICache } from './interfaces/cache';
 import { IRedisCacheConfig } from './interfaces/cache-config';
 
 export class RedisCache implements ICache {
-  protected redisClient: any = null;
-  protected ttl: number = 600;
+  private redisClient: any = null;
+  private ttl: number = 600;
+  private prefix: string = '';
+  private _tags: Array<string> = [];
 
   async connect(config: IRedisCacheConfig): Promise<RedisCache> {
     const { url, ttl = 600 } = config;
@@ -15,7 +17,7 @@ export class RedisCache implements ICache {
 
     this.redisClient = createClient({ url });
     // const client = createClient({ url });
-    // client.flushDb()
+    // client.sMembers()
 
     this.redisClient.on('error', (err: any) => {
       throw new Error(err);
@@ -30,12 +32,24 @@ export class RedisCache implements ICache {
     return this.redisClient.disconnect();
   }
 
+  tags(keys: Array<string>): RedisCache {
+    this._tags = keys;
+    return this;
+  }
+
   async set(key: string, value: any, ttl: any = null): Promise<string> {
     try {
-      return this.redisClient.set(key, JSON.stringify(value), {
+      const result = await this.redisClient.set(key, JSON.stringify(value), {
         EX: ttl ?? this.ttl,
-        NX: false,
+        NX: true,
       });
+
+      if (this._tags.length) {
+        await this.addTags(key);
+        await this.reset();
+      }
+
+      return result;
     } catch (err: any) {
       throw new Error(err);
     }
@@ -47,6 +61,10 @@ export class RedisCache implements ICache {
     } catch (err: any) {
       throw new Error(err);
     }
+  }
+
+  async forever(key: string, value: any): Promise<string> {
+    return this.set(key, value, 0);
   }
 
   async remember(key: string, cb: () => any, ttl: any = null) {
@@ -75,10 +93,72 @@ export class RedisCache implements ICache {
   }
 
   async destroy(key: string): Promise<boolean> {
-    return Boolean(await this.redisClient.del(key));
+    const destroyPromises = [this.redisClient.del(key)];
+
+    if (this._tags.length) {
+      this._tags.forEach((tag) => {
+        destroyPromises.push(this.redisClient.sRem(tag, key));
+      });
+      destroyPromises.push(this.reset());
+    }
+
+    const [delKeyResult] = await Promise.all(destroyPromises);
+
+    return Boolean(delKeyResult);
   }
 
   async flush(): Promise<boolean> {
+    if (this._tags.length) {
+      const keys = await this.redisClient.sUnion(this._tags);
+      if (!keys.length) return false;
+
+      const [delResult] = await Promise.all([this.redisClient.del(keys), this.reset()]);
+      return Boolean(delResult);
+    }
+
     return Boolean(await this.redisClient.flushDb());
+  }
+
+  async pull(key: string) {
+    try {
+      const result = await this.get(key);
+      await this.destroy(key);
+      return result;
+    } catch (err: any) {
+      throw new Error(err);
+    }
+  }
+
+  async put(key: string, value: any, ttl: any = null): Promise<string> {
+    try {
+      await this.destroy(key);
+      const result = await this.set(key, value, ttl);
+
+      if (this._tags.length) {
+        await this.addTags(key);
+        await this.reset();
+      }
+
+      return result;
+    } catch (err: any) {
+      throw new Error(err);
+    }
+  }
+
+  private async addTags(key: string) {
+    const tagPromises = this._tags
+      .filter(async (tag) => {
+        const members = await this.redisClient.sMembers(tag);
+        return !members.find(key);
+      })
+      .map((tag) => {
+        return this.redisClient.sAdd(tag, key);
+      });
+
+    return Promise.all(tagPromises);
+  }
+
+  private async reset() {
+    this._tags = [];
   }
 }
