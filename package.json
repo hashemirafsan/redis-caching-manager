@@ -10,7 +10,12 @@
     "lint": "tslint -p tsconfig.json",
     "test": "jest --config jestconfig.json --detectOpenHandles --unhandled-rejections=strict",
     "test:docker": "docker-compose up --abort-on-container-exit --exit-code-from redis-cache-manager",
-    "posttest:docker": "docker-compose down --volumes --remove-orphans"
+    "posttest:docker": "docker-compose down --volumes --remove-orphans",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test:docker && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "author": "Hashemi Rafsan",
   "license": "ISC",
@@ -28,5 +33,9 @@
   },
   "files": [
     "lib/**/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hashemirafsan/redis-caching-manager.git"
+  }
 }
