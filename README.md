@@ -28,7 +28,7 @@ const cacheManager = new RedisCache();
 
 **List of API:**
 
-- [set](#set)
+- [set](#setkey-value-ttl--null)
 - [get](get)
 - [has](has)
 - [remember](remember)
@@ -50,19 +50,149 @@ const cacheManager = new RedisCache();
 
 // connect redis
 
-await cacheManager.set('key', 'value', 100);
+await cacheManager.set('key', 'value', 100); // result = OK
+```
+
+### `get(key)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.get('key'); // result = value
+```
+
+### `has(key)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.has('key'); // result = true/false
+```
+
+### `remember(key, cb, ttl = null)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.remember(
+  'key',
+  async () => {
+    return 'updated_value';
+  },
+  100,
+); // result = updated_value
+```
+
+### `put(key, value, ttl = null)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.put('key', 'value', 100); // result = OK
+```
+
+### `pull(key)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+await cacheManager.pull('key'); // result = value
+```
+
+### `destroy(key)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.destroy('key'); // result = true/false
+```
+
+### `forever(key, value)`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.forever('key', 'value'); // result = true/false
+```
+
+### `tags(keys: string[])`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+// set with tags
+const result = await cacheManager.tags(['tag1', 'tag2']).set('key', 'value'); // result = OK
+
+// destroy with tags
+const result = await cacheManager.tags(['tag1', 'tag2']).destroy('key'); // result = true/false
+
+// flush with tags
+const result = await cacheManager.tags(['tag1', 'tag2']).flush(); // result = true/false
+```
+
+### `flush()`
+
+**example:**
+
+```javascript
+const { RedisCache } = require('redis-caching-manager');
+
+const cacheManager = new RedisCache();
+
+// connect redis
+
+const result = await cacheManager.flush(); // result = true/false
 ```
 
 That's it.
-
-## Convention
-
-- Your `*Filter` class should have methods in `apply*Property` format. Where the `*` will be replaced by the StudlyCase Property names. So, if your field name is `first_name`, then the method name should be `applyFirstNameProperty()`.
-- If you're passing an extra data to the Model's filter scope like `Model::filter($filter, ['id' => 4])`, then the provided array will take precedence over the request's data.
-
-## Caveat
-
-If your **request** & **provided array** to the `filter` scope cannot find any suitable method, then it'll return the whole table data as `select * from your_table`. Be aware of this issue.
 
 ## Contributing
 
