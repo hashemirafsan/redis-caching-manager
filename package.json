@@ -1,6 +1,6 @@
 {
   "name": "redis-caching-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A cache manager for redis",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
