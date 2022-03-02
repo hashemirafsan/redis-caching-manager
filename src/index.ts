@@ -55,6 +55,11 @@ export class RedisCache implements ICache {
     return this;
   }
 
+  /**
+   * It enables or disables the cache.
+   * @param {boolean} enable - boolean
+   * @returns RedisCache.
+   */
   public enable(enable: boolean): RedisCache {
     this._enable = enable;
     return this;
@@ -212,6 +217,13 @@ export class RedisCache implements ICache {
     }
   }
 
+  /**
+   * It sets a value in the cache.
+   * @param {string} key - The key to set.
+   * @param {any} value - The value to be stored in the cache.
+   * @param {number} ttl - The time-to-live in milliseconds for the key.
+   * @returns A promise.
+   */
   async put(key: string, value: any, ttl: number = this._ttl): Promise<boolean> {
     try {
       await this.destroy(key);
@@ -224,7 +236,7 @@ export class RedisCache implements ICache {
   /**
    * For each tag, if the key is not a member of the tag, add the key to the tag.
    * @param {string} key - The key to add to the set.
-   * @returns Nothing.
+   * @returns A Promise.
    */
   private async _addTags(key: string) {
     const tagPromises = this._tags
