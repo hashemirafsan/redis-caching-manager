@@ -1,5 +1,5 @@
 export interface ICache {
-  set(key: string, value: any, ttl: any): Promise<string>;
+  set(key: string, value: any, ttl: number): Promise<boolean>;
   get(key: string): any;
   forever(key: string, value: any): any;
   remember(key: string, cb: () => Promise<any>, ttl: any): any;

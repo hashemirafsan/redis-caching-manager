@@ -3,24 +3,27 @@ import { ICache } from './interfaces/cache';
 import { IRedisCacheConfig } from './interfaces/cache-config';
 
 export class RedisCache implements ICache {
+  /* This is a flag that is used to determine if the cache is enabled. */
+  private _enable: boolean = false;
   /* The above code is creating a new instance of the redis client. */
   private redisClient: any = null;
   /* The above code is setting the ttl value to 600. */
-  private ttl: number = 600;
+  private _ttl: number = 600;
   /* Creating a variable called prefix and setting it to an empty string. */
-  private prefix: string = '';
+  private _prefix: string = '';
   /* Creating an array of strings. */
   private _tags: string[] = [];
 
   /**
-   * Cannot generate summary
+   * If the cache is enabled, connect to the Redis server
    * @param {IRedisCacheConfig} config - IRedisCacheConfig
-   * @returns Nothing.
+   * @returns The RedisCache instance.
    */
   async connect(config: IRedisCacheConfig): Promise<RedisCache> {
-    const { url, ttl = 600, prefix = '' } = config;
-    this.ttl = ttl;
-    this.prefix = prefix;
+    const { url, ttl = 600, prefix = '', enable = false } = config;
+    this._enable = enable;
+    this._ttl = ttl;
+    this._prefix = prefix;
 
     if (this.redisClient?.ping() === 'PONG') return this;
     this.redisClient = createClient({ url });
@@ -35,7 +38,7 @@ export class RedisCache implements ICache {
   }
 
   /**
-   * Cannot generate summary
+   * It disconnects from the redis server.
    * @returns The promise of a RedisClient.
    */
   async disconnect() {
@@ -43,36 +46,41 @@ export class RedisCache implements ICache {
   }
 
   /**
-   * Cannot generate summary
-   * @param keys - An array of keys to be used as tags.
+   * It sets the tags for the cache.
+   * @param {string[]} keys - A list of keys to be used as tags.
    * @returns Nothing.
    */
-  tags(keys: string[]): RedisCache {
+  public tags(keys: string[]): RedisCache {
     this._tags = keys;
     return this;
   }
 
+  
   /**
-   * If the key doesn't exist, set it. If the key exists, do nothing.
+   * If the key is not already in the cache, set it to the value and set the expiration time
    * @param {string} key - The key to set.
    * @param {any} value - The value to be stored in the cache.
-   * @param {any} [ttl=null] - The time-to-live for the key.
-   * @returns The result of the redis set command.
+   * @param {number} ttl - The time-to-live in milliseconds for the key.
+   * @returns The return value is a boolean indicating whether the operation was successful.
    */
-  async set(key: string, value: any, ttl: any = null): Promise<string> {
+  async set(key: string, value: any, ttl: number = this._ttl): Promise<boolean> {
+    if (! this._enable) return false;
+
     try {
       key = this._setKeyPrefix(key);
       const result = await this.redisClient.set(key, JSON.stringify(value), {
-        EX: ttl ?? this.ttl,
+        EX: ttl,
         NX: true,
       });
+
+      if(result !== 'OK') return false
 
       if (this._tags.length) {
         await this._addTags(key);
         await this._reset();
       }
 
-      return result;
+      return true;
     } catch (err: any) {
       throw new Error(err);
     }
@@ -244,6 +252,6 @@ export class RedisCache implements ICache {
    * @returns The key with the prefix added to it.
    */
   private _setKeyPrefix(key: string) {
-    return `${this.prefix}${key}`;
+    return `${this._prefix}:${key}`;
   }
 }
