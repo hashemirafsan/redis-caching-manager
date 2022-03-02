@@ -22,6 +22,7 @@ const cacheManager = new RedisCache();
     url: 'redis://redis:6379',
     ttl: 300,
     prefix: 'dorik_', //optional
+    enable: false, //(optional) If enable false then all command will stop to execute
   });
 })();
 ```
