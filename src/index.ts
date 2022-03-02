@@ -111,16 +111,15 @@ export class RedisCache implements ICache {
     return this.set(key, value, 0);
   }
 
+  
   /**
-   * If the key exists, return the value. If the key does not exist, run the callback and save the
-   * value.
-   * @param {string} key - The key to remember.
+   * If the key is not in the cache, call the callback and store the result in the cache
+   * @param {string} key - The key to store the value under.
    * @param cb - A function that returns the value to be stored in the cache.
-   * @param {any} [ttl=null] - The time-to-live in milliseconds for the key. If not set, the key will
-   * be stored indefinitely.
+   * @param {number} ttl - The time-to-live in milliseconds for the key.
    * @returns The value that was set.
    */
-  async remember(key: string, cb: () => any, ttl: any = null) {
+  async remember(key: string, cb: () => any, ttl: number = this._ttl): Promise<any> {
     try {
       const oldValue = await this.get(key);
 
