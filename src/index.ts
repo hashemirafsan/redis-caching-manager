@@ -100,13 +100,14 @@ export class RedisCache implements ICache {
     }
   }
 
+  
   /**
-   * Set the value of the key to the value, but only if the key doesn't exist.
+   * Set the value of the key if it doesn't exist, and keep it forever.
    * @param {string} key - The key to set.
-   * @param {any} value - The value to be stored.
+   * @param {any} value - The value to be stored in the cache.
    * @returns A promise.
    */
-  async forever(key: string, value: any): Promise<string> {
+  async forever(key: string, value: any): Promise<boolean> {
     return this.set(key, value, 0);
   }
 
@@ -255,3 +256,17 @@ export class RedisCache implements ICache {
     return `${this._prefix}:${key}`;
   }
 }
+
+connect([
+  {
+    name: 'default',
+    url: '/something',
+    ttl: 'something'
+  },
+  {
+    name: 'queue',
+    url: '/something',
+    ttl: 'something'
+  },
+])
+cacheManager.name('queue').set('something', 'value')
