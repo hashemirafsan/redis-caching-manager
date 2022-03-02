@@ -4,7 +4,7 @@ import { IRedisCacheConfig } from './interfaces/cache-config';
 
 export class RedisCache implements ICache {
   /* This is a flag that is used to determine if the cache is enabled. */
-  private _enable: boolean = false;
+  private _enable: boolean = true;
   /* The above code is creating a new instance of the redis client. */
   private redisClient: any = null;
   /* The above code is setting the ttl value to 600. */
@@ -20,7 +20,7 @@ export class RedisCache implements ICache {
    * @returns The RedisCache instance.
    */
   async connect(config: IRedisCacheConfig): Promise<RedisCache> {
-    const { url, ttl = 600, prefix = '', enable = false } = config;
+    const { url, ttl = 600, prefix = '', enable = true } = config;
     this._enable = enable;
     this._ttl = ttl;
     this._prefix = prefix;
@@ -45,11 +45,7 @@ export class RedisCache implements ICache {
     return this.redisClient.disconnect();
   }
 
-  /**
-   * It sets the tags for the cache.
-   * @param {string[]} keys - A list of keys to be used as tags.
-   * @returns Nothing.
-   */
+  
   public tags(keys: string[]): RedisCache {
     this._tags = keys;
     return this;
@@ -92,6 +88,8 @@ export class RedisCache implements ICache {
    * @returns A promise.
    */
   async get(key: string) {
+    if (! this._enable) return null;
+
     try {
       key = this._setKeyPrefix(key);
       return JSON.parse(await this.redisClient.get(key));
@@ -142,19 +140,24 @@ export class RedisCache implements ICache {
    * @returns A boolean value.
    */
   async has(key: string): Promise<boolean> {
+    if (! this._enable) return false;
+
     try {
       return Boolean(await this.redisClient.exists(this._setKeyPrefix(key)));
-    } catch (error) {
-      return false;
+    } catch (err: any) {
+      throw new Error(err);
     }
   }
 
+  
   /**
-   * Cannot generate summary
+   * It deletes the key from the cache and removes the key from the tags.
    * @param {string} key - The key to be deleted.
    * @returns The result of the `del` command.
    */
   async destroy(key: string): Promise<boolean> {
+    if (! this._enable) return false;
+
     key = this._setKeyPrefix(key);
     const destroyPromises = [this.redisClient.del(key)];
 
@@ -202,20 +205,10 @@ export class RedisCache implements ICache {
     }
   }
 
-  /**
-   * Cannot generate summary
-   * @param {string} key - The key to store the value under.
-   * @param {any} value - The value to be stored in the cache.
-   * @param {any} [ttl=null] - The time-to-live (TTL) in milliseconds for the key. If it's not set, the
-   * key will live forever.
-   * @returns A string.
-   */
-  async put(key: string, value: any, ttl: any = null): Promise<string> {
+  async put(key: string, value: any, ttl: number = this._ttl): Promise<boolean> {
     try {
       await this.destroy(key);
-      const result = await this.set(key, value, ttl);
-
-      return result;
+      return this.set(key, value, ttl);
     } catch (err: any) {
       throw new Error(err);
     }
@@ -242,30 +235,17 @@ export class RedisCache implements ICache {
   /**
    * Reset the tags array.
    */
-  private async _reset() {
+  private async _reset(): Promise<void> {
     this._tags = [];
   }
 
+
   /**
-   * Set the key prefix to be used in the Redis store.
+   * Set the key prefix to the value of the _prefix property
    * @param {string} key - The key to set.
    * @returns The key with the prefix added to it.
    */
-  private _setKeyPrefix(key: string) {
+  private _setKeyPrefix(key: string): string {
     return `${this._prefix}:${key}`;
   }
 }
-
-connect([
-  {
-    name: 'default',
-    url: '/something',
-    ttl: 'something'
-  },
-  {
-    name: 'queue',
-    url: '/something',
-    ttl: 'something'
-  },
-])
-cacheManager.name('queue').set('something', 'value')

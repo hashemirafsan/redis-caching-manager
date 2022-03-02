@@ -13,12 +13,12 @@ beforeAll(async () => {
 });
 
 test('Redis TAG set', async () => {
-  expect(await cacheManager.tags(['tag1']).set('key1', 'value1')).toBe('OK');
+  expect(await cacheManager.tags(['tag1']).set('key1', 'value1')).toBeTruthy();
 });
 
 test('Redis TAG set if exists', async () => {
   await cacheManager.tags(['tag1']).set('key1', 'value1');
-  expect(await cacheManager.tags(['tag1']).set('key1', 'value1')).toBeNull();
+  expect(await cacheManager.tags(['tag1']).set('key1', 'value1')).toBeFalsy();
 });
 
 test('Redis TAG destroy', async () => {

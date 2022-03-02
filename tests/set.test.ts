@@ -13,24 +13,24 @@ beforeAll(async () => {
 });
 
 test('Redis SET (string)', async () => {
-  expect(await cacheManager.set('key', 'value')).toBe('OK');
+  expect(await cacheManager.set('key', 'value')).toBeTruthy();
 });
 
 test('Redis SET (object)', async () => {
-  expect(await cacheManager.set('key', { value: true })).toBe('OK');
+  expect(await cacheManager.set('key', { value: true })).toBeTruthy;
 });
 
 test('Redis SET (number)', async () => {
-  expect(await cacheManager.set('key', 1)).toBe('OK');
+  expect(await cacheManager.set('key', 1)).toBeTruthy();
 });
 
 test('Redis SET (boolean)', async () => {
-  expect(await cacheManager.set('key', true)).toBe('OK');
+  expect(await cacheManager.set('key', true)).toBeTruthy();
 });
 
 test('Redis SET if exists', async () => {
   await cacheManager.set('key', 'value');
-  expect(await cacheManager.set('key', 'value1')).toBeNull();
+  expect(await cacheManager.set('key', 'value1')).toBeFalsy();
 });
 
 afterAll(async () => {

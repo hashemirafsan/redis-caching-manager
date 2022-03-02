@@ -6,6 +6,6 @@ export interface ICache {
   has(key: string): Promise<boolean>;
   destroy(key: string): Promise<boolean>;
   flush(): Promise<boolean>;
-  put(key: string, value: any, ttl: any): Promise<string>;
+  put(key: string, value: any, ttl: number): Promise<boolean>;
   pull(key: string): any;
 }

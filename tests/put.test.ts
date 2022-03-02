@@ -14,11 +14,11 @@ beforeAll(async () => {
 
 test('Redis PUT', async () => {
   await cacheManager.set('key', 'value');
-  expect(await cacheManager.put('key', 'updated_value')).toBe('OK');
+  expect(await cacheManager.put('key', 'updated_value')).toBeTruthy();
 });
 
 test('Redis PUT if not exists', async () => {
-  expect(await cacheManager.put('key', 'updated_value')).toBe('OK');
+  expect(await cacheManager.put('key', 'updated_value')).toBeTruthy();
 });
 
 afterAll(async () => {
