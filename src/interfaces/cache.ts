@@ -1,7 +1,7 @@
 export interface ICache {
   set(key: string, value: any, ttl: number): Promise<boolean>;
   get(key: string): any;
-  forever(key: string, value: any): any;
+  forever(key: string, value: any): Promise<boolean>;
   remember(key: string, cb: () => Promise<any>, ttl: any): any;
   has(key: string): Promise<boolean>;
   destroy(key: string): Promise<boolean>;
