@@ -45,13 +45,21 @@ export class RedisCache implements ICache {
     return this.redisClient.disconnect();
   }
 
-  
+  /**
+   * It sets the tags for the cache.
+   * @param {string[]} keys - A list of keys to be used as tags.
+   * @returns RedisCache.
+   */
   public tags(keys: string[]): RedisCache {
     this._tags = keys;
     return this;
   }
 
-  
+  public enable(enable: boolean): RedisCache {
+    this._enable = enable;
+    return this;
+  }
+
   /**
    * If the key is not already in the cache, set it to the value and set the expiration time
    * @param {string} key - The key to set.
@@ -60,7 +68,7 @@ export class RedisCache implements ICache {
    * @returns The return value is a boolean indicating whether the operation was successful.
    */
   async set(key: string, value: any, ttl: number = this._ttl): Promise<boolean> {
-    if (! this._enable) return false;
+    if (!this._enable) return false;
 
     try {
       key = this._setKeyPrefix(key);
@@ -69,7 +77,7 @@ export class RedisCache implements ICache {
         NX: true,
       });
 
-      if(result !== 'OK') return false
+      if (result !== 'OK') return false;
 
       if (this._tags.length) {
         await this._addTags(key);
@@ -87,8 +95,8 @@ export class RedisCache implements ICache {
    * @param {string} key - The key to get the value for.
    * @returns A promise.
    */
-  async get(key: string) {
-    if (! this._enable) return null;
+  async get(key: string): Promise<any> {
+    if (!this._enable) return null;
 
     try {
       key = this._setKeyPrefix(key);
@@ -98,7 +106,6 @@ export class RedisCache implements ICache {
     }
   }
 
-  
   /**
    * Set the value of the key if it doesn't exist, and keep it forever.
    * @param {string} key - The key to set.
@@ -109,7 +116,6 @@ export class RedisCache implements ICache {
     return this.set(key, value, 0);
   }
 
-  
   /**
    * If the key is not in the cache, call the callback and store the result in the cache
    * @param {string} key - The key to store the value under.
@@ -140,7 +146,7 @@ export class RedisCache implements ICache {
    * @returns A boolean value.
    */
   async has(key: string): Promise<boolean> {
-    if (! this._enable) return false;
+    if (!this._enable) return false;
 
     try {
       return Boolean(await this.redisClient.exists(this._setKeyPrefix(key)));
@@ -149,14 +155,13 @@ export class RedisCache implements ICache {
     }
   }
 
-  
   /**
    * It deletes the key from the cache and removes the key from the tags.
    * @param {string} key - The key to be deleted.
    * @returns The result of the `del` command.
    */
   async destroy(key: string): Promise<boolean> {
-    if (! this._enable) return false;
+    if (!this._enable) return false;
 
     key = this._setKeyPrefix(key);
     const destroyPromises = [this.redisClient.del(key)];
@@ -179,6 +184,8 @@ export class RedisCache implements ICache {
    * @returns The return value is a boolean indicating whether the flush operation was successful.
    */
   async flush(): Promise<boolean> {
+    if (!this._enable) return false;
+
     if (this._tags.length) {
       const keys = await this.redisClient.sUnion(this._tags);
       if (!keys.length) return false;
@@ -238,7 +245,6 @@ export class RedisCache implements ICache {
   private async _reset(): Promise<void> {
     this._tags = [];
   }
-
 
   /**
    * Set the key prefix to the value of the _prefix property
