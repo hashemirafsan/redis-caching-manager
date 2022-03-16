@@ -1,5 +1,4 @@
 .idea
 node_modules/
 lib/
-Dockerfile.test
-docker-compose.yml
+pnpm-lock.yaml

@@ -1,0 +1,23 @@
+version: '3.1'
+
+services:
+  redis-cache-manager:
+    container_name: redis-cache-manager
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ../:/usr/src/app
+    depends_on:
+      - redis
+    command: npm run test
+
+  redis: # Redis
+    image: redis
+    logging:
+      driver: none
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 20s
+      timeout: 5s
+      retries: 3

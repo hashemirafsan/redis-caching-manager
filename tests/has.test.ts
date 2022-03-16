@@ -8,7 +8,7 @@ beforeEach(async () => {
 
 beforeAll(async () => {
   await cacheManager.connect({
-    url: 'redis://redis:6379',
+    url: process.env.REDIS_URL ?? 'redis://redis:6379',
   });
 });
 
